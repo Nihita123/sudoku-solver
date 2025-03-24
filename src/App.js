@@ -1,145 +1,149 @@
-// App.js - Sudoku Solver with Wrong Number Indication
-import React, { useState, useEffect } from "react";
+// App.js - Slower Backtracking Animation
+import React, { useState } from "react";
 import "./App.css";
 
-// Helper function to generate a blank Sudoku grid
-const generateEmptyGrid = () =>
-  Array(9)
-    .fill(null)
-    .map(() => Array(9).fill(0));
-
-// Function to check if the Sudoku number is valid
-const isValid = (grid, row, col, num) => {
-  // Check row and column
-  for (let i = 0; i < 9; i++) {
-    if (grid[row][i] === num || grid[i][col] === num) return false;
-  }
-
-  // Check 3x3 box
-  const boxRow = Math.floor(row / 3) * 3;
-  const boxCol = Math.floor(col / 3) * 3;
-  for (let i = boxRow; i < boxRow + 3; i++) {
-    for (let j = boxCol; j < boxCol + 3; j++) {
-      if (grid[i][j] === num) return false;
-    }
-  }
-
-  return true;
-};
-
-// Sudoku solving function (Backtracking algorithm)
-const solveSudoku = (grid) => {
-  for (let row = 0; row < 9; row++) {
-    for (let col = 0; col < 9; col++) {
-      if (grid[row][col] === 0) {
-        for (let num = 1; num <= 9; num++) {
-          if (isValid(grid, row, col, num)) {
-            grid[row][col] = num;
-            if (solveSudoku(grid)) return true;
-            grid[row][col] = 0;
-          }
-        }
-        return false;
-      }
-    }
-  }
-  return true;
-};
-
-// Random Sudoku Generator
-const generateRandomPuzzle = () => {
-  const grid = generateEmptyGrid();
-  solveSudoku(grid);
-
-  // Remove random numbers to create a puzzle
-  const puzzle = grid.map((row) => [...row]);
-  let clues = 40; // Number of visible clues
-  while (clues > 0) {
-    const row = Math.floor(Math.random() * 9);
-    const col = Math.floor(Math.random() * 9);
-    if (puzzle[row][col] !== 0) {
-      puzzle[row][col] = 0;
-      clues--;
-    }
-  }
-  return puzzle;
-};
+// Generate an empty 9x9 Sudoku board
+const initialBoard = Array(9)
+  .fill(null)
+  .map(() => Array(9).fill(""));
 
 const App = () => {
-  const [grid, setGrid] = useState(generateRandomPuzzle());
-  const [errors, setErrors] = useState(new Set());
+  // Helper: Validate if a number is safe to place
+  const isValid = (board, row, col, num) => {
+    for (let i = 0; i < 9; i++) {
+      if (board[row][i] === num || board[i][col] === num) return false;
 
-  // Handle cell change and validate input
-  const handleChange = (row, col, value) => {
-    if (value === "" || (/^[1-9]$/.test(value) && value.length === 1)) {
-      const newGrid = grid.map((r) => [...r]);
-      newGrid[row][col] = value === "" ? 0 : parseInt(value, 10);
-      setGrid(newGrid);
-      checkForErrors(newGrid);
+      const boxRow = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+      const boxCol = 3 * Math.floor(col / 3) + (i % 3);
+      if (board[boxRow][boxCol] === num) return false;
     }
+    return true;
   };
 
-  // Validate entire grid and mark errors
-  const checkForErrors = (grid) => {
-    const newErrors = new Set();
-
+  // Backtracking solver
+  const solveSudoku = (board) => {
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
-        const value = grid[row][col];
-        if (value !== 0) {
-          grid[row][col] = 0; // Temporarily remove to check validity
-          if (!isValid(grid, row, col, value)) {
-            newErrors.add(`${row}-${col}`);
+        if (board[row][col] === "") {
+          for (let num = 1; num <= 9; num++) {
+            if (isValid(board, row, col, num.toString())) {
+              board[row][col] = num.toString();
+              if (solveSudoku(board)) return true;
+              board[row][col] = ""; // Backtrack
+            }
           }
-          grid[row][col] = value; // Restore value
+          return false;
         }
       }
     }
-    setErrors(newErrors);
+    return true;
   };
 
-  // Solve Sudoku on button click
-  const handleSolve = () => {
-    const solvedGrid = grid.map((row) => [...row]);
-    solveSudoku(solvedGrid);
-    setGrid(solvedGrid);
-    setErrors(new Set());
+  // Random puzzle generator
+  const generateSudoku = () => {
+    let puzzle = initialBoard.map((row) => [...row]);
+    solveSudoku(puzzle); // Solve a complete grid
+    removeNumbers(puzzle); // Remove numbers to create a puzzle
+    return puzzle;
   };
 
-  // Reset Puzzle
-  const handleReset = () => {
-    setGrid(generateRandomPuzzle());
-    setErrors(new Set());
+  // Remove random numbers to create a solvable puzzle
+  const removeNumbers = (puzzle) => {
+    let attempts = 40; // Controls difficulty (more = harder)
+    while (attempts > 0) {
+      let row = Math.floor(Math.random() * 9);
+      let col = Math.floor(Math.random() * 9);
+      if (puzzle[row][col] !== "") {
+        puzzle[row][col] = "";
+        attempts--;
+      }
+    }
   };
+
+  // Board State
+  const [board, setBoard] = useState(generateSudoku());
+  const [selectedCell, setSelectedCell] = useState({ row: -1, col: -1 });
+
+  // Animate solving with a slower delay
+  const animateSolve = async () => {
+    const copy = board.map((row) => [...row]);
+    await visualizeSolve(copy);
+    setBoard(copy);
+  };
+
+  // Visualize the solving process (slower animation)
+  const visualizeSolve = async (board) => {
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (board[row][col] === "") {
+          for (let num = 1; num <= 9; num++) {
+            if (isValid(board, row, col, num.toString())) {
+              board[row][col] = num.toString();
+              setBoard([...board]);
+              await new Promise((resolve) => setTimeout(resolve, 200)); // Slower delay (200ms)
+              if (await visualizeSolve(board)) return true;
+              board[row][col] = ""; // Backtrack
+              setBoard([...board]);
+              await new Promise((resolve) => setTimeout(resolve, 200)); // Backtracking delay (200ms)
+            }
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Handle user input (validate digits 1-9 only)
+  const handleChange = (row, col, value) => {
+    if (/^[1-9]?$/.test(value)) {
+      const newBoard = board.map((r) => [...r]);
+      newBoard[row][col] = value;
+      setBoard(newBoard);
+    }
+  };
+
+  // Highlight selected row and column
+  const handleSelect = (row, col) => setSelectedCell({ row, col });
+
+  // Reset board with a new puzzle
+  const resetBoard = () => setBoard(generateSudoku());
 
   return (
     <div className="sudoku-container">
       <h1>Sudoku Solver</h1>
 
+      {/* Sudoku Grid */}
       <div className="sudoku-grid">
-        {grid.map((row, rowIndex) =>
+        {board.map((row, rowIndex) =>
           row.map((cell, colIndex) => {
-            const isError = errors.has(`${rowIndex}-${colIndex}`);
+            const isSelected =
+              rowIndex === selectedCell.row || colIndex === selectedCell.col;
+            const isGreyBox =
+              Math.floor(rowIndex / 3) % 2 === Math.floor(colIndex / 3) % 2;
+
             return (
               <input
                 key={`${rowIndex}-${colIndex}`}
-                type="text"
-                value={cell === 0 ? "" : cell}
+                className={`sudoku-cell ${isSelected ? "highlight" : ""} ${
+                  isGreyBox ? "grey-box" : "white-box"
+                }`}
+                value={cell}
                 onChange={(e) =>
                   handleChange(rowIndex, colIndex, e.target.value)
                 }
-                className={`sudoku-cell ${isError ? "error" : ""} ${
-                  rowIndex % 3 === 2 ? "bottom-border" : ""
-                } ${colIndex % 3 === 2 ? "right-border" : ""}`}
+                onClick={() => handleSelect(rowIndex, colIndex)}
+                readOnly={cell !== ""}
               />
             );
           })
         )}
       </div>
 
+      {/* Controls */}
       <div className="controls">
-        <button onClick={handleSolve}>Solve</button>
-        <button onClick={handleReset}>New Puzzle</button>
+        <button onClick={resetBoard}>New Puzzle</button>
+        <button onClick={animateSolve}>Solve (Slow)</button>
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
-/* App.css - Enhanced Sudoku Styling */
+/* App.css - Perfect Square Sudoku Styling */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
 
 body {
   font-family: "Poppins", sans-serif;
@@ -25,70 +27,80 @@ h1 {
   align-items: center;
 }
 
-/* Main Sudoku Board */
+/* Main Sudoku Board (Fixed Square) */
 .sudoku-grid {
   display: grid;
-  grid-template-columns: repeat(9, 45px);
-  grid-gap: 0;
-  border: 3px solid black; /* Black outline for the board */
-  padding: 5px;
+  grid-template-columns: repeat(9, 1fr); /* Perfectly square cells */
+  grid-template-rows: repeat(9, 1fr);
+  width: 450px; /* Fixed width */
+  height: 450px; /* Fixed height */
+  border: 3px solid black; /* Black outline */
   border-radius: 4px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Sudoku Cell Styling */
+/* Sudoku Cell (Ensuring Each Cell is Square) */
 .sudoku-cell {
-  width: 45px;
-  height: 45px;
-  text-align: center;
+  width: 50px; /* Fixed square */
+  height: 50px; /* Fixed square */
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 1.3rem;
   border: 1px solid black; /* Consistent black outline */
+  box-sizing: border-box; /* Include padding/border in size */
   outline: none;
   background: white; /* Default background */
   color: #333;
-  box-sizing: border-box;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-/* Checkerboard 3x3 Alternating Boxes */
-.sudoku-cell:nth-child(n + 1):nth-child(-n + 27),
-.sudoku-cell:nth-child(n + 55):nth-child(-n + 81) {
-  background: #f0f0f0; /* Grey for top-left and bottom-right 3x3 blocks */
+/* Alternating 3x3 Checkerboard Pattern */
+.sudoku-cell {
+  background: white; /* Default background */
 }
 
-.sudoku-cell:nth-child(n + 28):nth-child(-n + 54) {
-  background: white; /* White for the middle 3x3 box */
-}
-
-.sudoku-cell:nth-child(9n + 4),
-.sudoku-cell:nth-child(9n + 5),
-.sudoku-cell:nth-child(9n + 6) {
-  background: white; /* Center columns in grey blocks */
-}
-
+/* Grey Background for Alternating 3x3 Blocks */
 .sudoku-cell:nth-child(9n + 1),
 .sudoku-cell:nth-child(9n + 2),
 .sudoku-cell:nth-child(9n + 3),
 .sudoku-cell:nth-child(9n + 7),
 .sudoku-cell:nth-child(9n + 8),
 .sudoku-cell:nth-child(9n + 9) {
-  background: #f0f0f0; /* Grey for outer columns */
+  background: #f0f0f0; /* Grey outer columns */
 }
 
-/* Highlight the focused cell and its row/column */
+.sudoku-cell:nth-child(n + 1):nth-child(-n + 27),
+.sudoku-cell:nth-child(n + 55):nth-child(-n + 81) {
+  background: #f0f0f0; /* Grey for outer 3x3 blocks */
+}
+
+.sudoku-cell:nth-child(n + 28):nth-child(-n + 54) {
+  background: white; /* Middle 3x3 block stays white */
+}
+
+/* Focus Effect on Active Cell */
 .sudoku-cell:focus {
-  background: #fff8dc; /* Light yellow for focused cell */
+  background: #fff8dc; /* Light yellow for active cell */
   z-index: 1;
 }
 
-/* Row Highlight */
+/* Row and Column Highlight */
 .sudoku-cell.highlight-row {
-  background: #faf0f4; /* Soft pink tint for rows */
+  background: #faf0f4; /* Soft pink for rows */
 }
 
-/* Column Highlight */
 .sudoku-cell.highlight-col {
-  background: #faf0f4; /* Soft pink tint for columns */
+  background: #faf0f4; /* Soft pink for columns */
+}
+
+/* Backtracking Animation */
+.sudoku-cell.valid-step {
+  background: #d4f8d4; /* Light green for valid steps */
+}
+
+.sudoku-cell.backtrack-step {
+  background: #fdd; /* Light red for backtracking steps */
 }
 
 /* Controls */
@@ -100,12 +112,12 @@ button {
   margin: 10px;
   padding: 10px 20px;
   font-size: 1rem;
-  border: 1px solid black; /* Black outline for buttons */
+  border: 1px solid black; /* Black outline */
   border-radius: 4px;
   cursor: pointer;
   background: white;
   color: black;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 button:hover {
